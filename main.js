@@ -8,52 +8,58 @@ canvas.height = window.innerHeight;
 
 class Grid {
     static cellSize = 30;
-    static rows = canvas.height / Grid.cellSize;
-    static cols = canvas.width / Grid.cellSize;
+    static cols = Math.floor(canvas.width / Grid.cellSize);
+    static rows = Math.floor(canvas.height / Grid.cellSize);
     
     constructor () {
         this.grid = [];
-        this.grainColor = {h:0,s:255,b:255};
-        // fill grid with zeroes
-        for (let i = 0; i < this.rows; i++) {
-            this.grid.push([]);
-            for (let j = 0; j < this.cols; j++) {
-                this.grid[i].push(0);
-            }
-        }
-        
+        this.grainColor = {h:200,s:100,l:70};
+        this.filled = [];
+
     }
 
     draw() {
-        for (let i = 0; i < this.rows; i++ ){
-            for (let j = 0; j < this.cols; j++) {
-                if (this.grid[i][j] === 0) {
-                    ctx.beginPath(); 
-                    ctx.rect(i*this.cellSize, j*this.cellSize, this.cellSize, this.cellSize); 
-                    ctx.fillStyle = `hsb(${this.grainColor.h},${this.grainColor.s},${this.grainColor.b})`;
-                    ctx.fill();
-                }
-            }
+        // loop through filled
+        for (let i = 0; i < this.filled.length; i++) {
+            
+            let x = this.filled[i].x;
+            let y = this.filled[i].y;
+            ctx.beginPath(); 
+            ctx.rect(x*Grid.cellSize, y*Grid.cellSize, Grid.cellSize, Grid.cellSize); 
+            ctx.fillStyle = `hsl(${this.grainColor.h} ${this.grainColor.s}% ${this.grainColor.l}%)`;
+            ctx.fill();
         }
-        
     }
 
-    placeSand(e) {
-        let grainRow = Math.floor(e.clientX / Grid.cellSize);
-        let grainCol = Math.floor(e.clientY / Grid.cellSize)
-        this.grid[grainRow][grainCol] = this.color
-    }
+    placeSand(mouseX,mouseY) {
+        let grainX = Math.floor(mouseX / Grid.cellSize);
+        let grainY = Math.floor(mouseY / Grid.cellSize);
 
-    swap() {
-
+        if (grainX < Grid.cols && grainY< Grid.rows && !this.filled.includes({x:grainX,y:grainY}))
+            this.filled.push({x:grainX,y:grainY});
     }
 }
 
 function main() {  
     let grid = new Grid();
-    grid.draw();
+    let mouseDown = false;
+
+    addEventListener("mousedown", function(e) {
+        grid.placeSand(e.clientX,e.clientY);
+        mouseDown = true;
+    });
+
+    addEventListener("mousemove", function(e) {
+        if (mouseDown) {
+            grid.placeSand(e.clientX,e.clientY);
+        }
+    })
     
-    addEventListener("mousedown", grid.placeSand);
+    addEventListener("mouseup", function() {
+        mouseDown = false;
+    }) ;
+    setInterval(grid.draw.bind(grid), 1000/60);
+
 }
 
 main();
