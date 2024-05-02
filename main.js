@@ -11,7 +11,7 @@ function containsPoint(arr, point) {
 }
 
 class Grid {
-    static cellSize = 30;
+    static cellSize = 20;
     static cols = Math.floor(canvas.width / Grid.cellSize);
     static rows = Math.floor(canvas.height / Grid.cellSize);
     
@@ -23,15 +23,16 @@ class Grid {
 
     update() {
         // clear screen
-        ctx.beginPath(); 
-        ctx.rect(0, 0, canvas.width, canvas.height); 
-        ctx.fillStyle = `rgb(24 24 24)`;
-        ctx.fill();
-        ctx.closePath()
+        this.drawRect(0,0,canvas.width, canvas.height,'rgb(24 24 24)');
+        // pointer
+        this.drawRect(
+            (Mouse.x-Grid.cellSize/2)/Grid.cellSize,
+            (Mouse.y-Grid.cellSize/2)/Grid.cellSize,
+            Grid.cellSize, Grid.cellSize,
+            `hsl(${this.grainColor.h} ${this.grainColor.s}% ${this.grainColor.l}%)`
+        );
 
-        // place grains
         if (Mouse.down) this.placeSand(Mouse.x, Mouse.y);
-
         this.drawGrains();
 
         // update grains
@@ -42,8 +43,10 @@ class Grid {
             let bottomLeft = {x:grainX-1, y:grainY+1}
             let bottom = {x:grainX, y:grainY+1}
             let bottomRight = {x:grainX+1, y:grainY+1}
-
+            // let dir = ['left','right'][Math.floor(Math.random()*2)]; // removed bc random doesn't look nice
+            
             if (grainY < Grid.rows) {
+
                 // bottom left
                 if (!containsPoint(this.filled, bottom)) this.filled.push(bottom);
                 else if (!containsPoint(this.filled, bottomRight) && grainX < Grid.cols) this.filled.push(bottomRight);
@@ -53,21 +56,14 @@ class Grid {
                 i--;
                 checkLen--;
             }
-
         }
     }
     
-
     drawGrains() {
-        for (let i = 0; i < this.filled.length; i++) {
-            let x = this.filled[i].x;
-            let y = this.filled[i].y;
-            ctx.beginPath(); 
-            ctx.rect(x*Grid.cellSize, y*Grid.cellSize, Grid.cellSize, Grid.cellSize); 
-            ctx.fillStyle = `hsl(${this.grainColor.h} ${this.grainColor.s}% ${this.grainColor.l}%)`;
-            ctx.fill();
-            ctx.closePath()
-        }
+        for (let i = 0; i < this.filled.length; i++) 
+            this.drawRect(this.filled[i].x, this.filled[i].y,Grid.cellSize, Grid.cellSize,
+                `hsl(${this.grainColor.h} ${this.grainColor.s}% ${this.grainColor.l}%)`
+            );
     }
 
     placeSand(mouseX,mouseY) {
@@ -77,6 +73,15 @@ class Grid {
         if (grainX < Grid.cols && grainY< Grid.rows && !containsPoint(this.filled, {x:grainX,y:grainY}))
             this.filled.push({x:grainX,y:grainY});
     }
+
+    drawRect(x,y,width,height,color) {
+        ctx.beginPath(); 
+        ctx.rect(x*Grid.cellSize, y*Grid.cellSize, width, height); 
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath()
+    }
+
 }
 
 let grid = new Grid();
@@ -97,8 +102,7 @@ function main() {
         Mouse.y = e.clientY;
     })
     
-    
-    setInterval(grid.update.bind(grid), 1000/60);
+    setInterval(grid.update.bind(grid), 1000/100);
 
 }
 
